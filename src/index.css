@@ -1,0 +1,255 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   DESIGN TOKENS — the single source of truth.
+   Every color in the product resolves to one of these.
+   ============================================================ */
+:root {
+  --bg: #050509;
+  --panel: #0b0b14;
+  --ink: #ffffff;
+  --ink-soft: #a8a6b8;
+  --ink-dim: #6e6b82;
+  --rule: rgba(255, 255, 255, 0.12);
+  --glass: rgba(255, 255, 255, 0.05);
+
+  /* Brand accents */
+  --violet: #8b5cf6;
+  --indigo: #4f46e5;
+  --cyan: #22d3ee;
+
+  /* The six categories. Each academy, course card, progress bar and
+     chat avatar takes its color from here and nowhere else. */
+  --c-trading: #34d399;
+  --c-business: #60a5fa;
+  --c-programming: #a78bfa;
+  --c-design: #f472b6;
+  --c-ai: #22d3ee;
+  --c-marketing: #fb923c;
+  /* Deliberately neutral — "Lainnya" is a staging area, not a seventh field. */
+  --c-others: #8b8a9c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Visible keyboard focus everywhere — never removed. */
+:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   ATMOSPHERE — the Nocturne background system.
+   Used by <Aurora />; not applied to elements directly.
+   ============================================================ */
+/* Soft glow WITHOUT filter: blur().
+   A 700px element blurred at 110px has to be rasterized at full size and
+   re-rasterized on any change — the most expensive thing that was on this
+   page. A radial gradient paints the same falloff essentially for free. */
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  /* --glow is set per-blob from the component */
+  background-image: radial-gradient(closest-side, var(--glow), transparent 100%);
+  opacity: 0.85;
+  animation: drift 26s var(--ease-in-out) infinite;
+}
+
+.aurora-beam {
+  position: absolute;
+  top: -260px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1000px, 140vw);
+  height: 760px;
+  background: radial-gradient(
+    ellipse 50% 50% at 50% 0%,
+    rgba(139, 92, 246, 0.3),
+    rgba(79, 70, 229, 0.1) 45%,
+    transparent 72%
+  );
+  pointer-events: none;
+}
+
+.aurora-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 30%, #000 20%, transparent 78%);
+  mask-image: radial-gradient(ellipse 70% 55% at 50% 30%, #000 20%, transparent 78%);
+}
+
+.aurora-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.14;
+  /* mix-blend-mode on a full-screen layer forces the compositor to re-blend
+     the page beneath it. Plain low-opacity overlay costs far less. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============================================================
+   COMPONENT PRIMITIVES
+   ============================================================ */
+.glass-panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015));
+  border: 1px solid var(--rule);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.gradient-text {
+  background: linear-gradient(105deg, #ffffff 8%, #c4b5fd 38%, #818cf8 62%, #67e8f9 92%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Horizontal scrollers (category rails on mobile) without visible scrollbars */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================================
+   MOTION
+   Three rules this system follows:
+   1. Motion answers an action (tap, navigate, state change).
+      It does not decorate arrival.
+   2. One orchestrated moment per session — the home hero.
+      Everything else is instant or reactive.
+   3. Everything degrades to nothing under prefers-reduced-motion,
+      handled globally near the top of this file.
+   ============================================================ */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 140ms;
+  --dur-base: 240ms;
+  --dur-slow: 420ms;
+}
+
+/* ---- The one orchestrated moment: home hero ---- */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero-rise > * {
+  animation: rise var(--dur-slow) var(--ease-out) both;
+}
+/* Stagger reads as one movement rather than separate entrances. */
+.hero-rise > *:nth-child(1) { animation-delay: 0ms; }
+.hero-rise > *:nth-child(2) { animation-delay: 70ms; }
+.hero-rise > *:nth-child(3) { animation-delay: 130ms; }
+.hero-rise > *:nth-child(4) { animation-delay: 190ms; }
+.hero-rise > *:nth-child(5) { animation-delay: 240ms; }
+.hero-rise > *:nth-child(6) { animation-delay: 290ms; }
+
+/* Aurora drift — very slow, barely perceptible, gives the
+   background life without pulling attention. */
+/* Aurora drift, opacity only.
+   Opacity animates on the compositor without repainting. Transform on a
+   gradient this large still costs a repaint, so it is deliberately not used. */
+@keyframes drift {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+.aurora-blob:nth-child(2) { animation-duration: 32s; animation-delay: -8s; }
+.aurora-blob:nth-child(3) { animation-duration: 38s; animation-delay: -15s; }
+
+/* ---- Progress bars animate to their value ---- */
+.progress-fill {
+  transition: width var(--dur-slow) var(--ease-out);
+}
+
+/* ---- Live indicator ---- */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.is-live {
+  animation: live-pulse 1.8s var(--ease-in-out) infinite;
+}
+
+/* ---- Interactive surfaces: respond to touch, don't drift on hover ---- */
+.pressable {
+  transition: transform var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+.pressable:active {
+  transform: scale(0.985);
+}
+
+/* ============================================================
+   VIEW TRANSITIONS
+   Native browser transitions between routes, driven by
+   React Router's viewTransition prop. No library.
+   ============================================================ */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: vt-out var(--dur-base) var(--ease-out) both;
+  }
+  ::view-transition-new(root) {
+    animation: vt-in var(--dur-base) var(--ease-out) both;
+  }
+}
+
+@keyframes vt-out {
+  to { opacity: 0; }
+}
+@keyframes vt-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+/* The shared element: a course title morphs from the list into the
+   detail page heading. This is the one piece of choreography worth
+   having — it tells the user where they came from. */
+::view-transition-old(course-title),
+::view-transition-new(course-title) {
+  animation-duration: var(--dur-slow);
+  animation-timing-function: var(--ease-out);
+}
